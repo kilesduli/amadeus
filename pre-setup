@@ -1,0 +1,28 @@
+#!/usr/bin/env -S emacs -x
+;; -*- mode: emacs-lisp -*-
+
+(defvar xdg-share-dir (expand-file-name (concat "~" user-login-name "/.local/share/")))
+(defvar straight-base-dir xdg-share-dir)
+(setq user-emacs-directory (file-name-directory load-file-name))
+
+(defun ensure-directory-and-symlink (dir link)
+  "Ensure DIR exists and create a symbolic LINK pointing to it.
+If LINK exists but is not a symlink, it will be deleted first."
+  (unless (file-directory-p dir)
+    (make-directory dir 'parents)
+    (message ":: create %s" dir))
+  (unless (file-symlink-p link)
+    (when (file-exists-p link)
+      (delete-file link))
+    (make-symbolic-link dir link)
+    (message ":: link %s to %s" dir link))
+  (message ":: %s and link %s already created" dir link))
+
+
+(let ((emacs-straight (concat xdg-share-dir "emacs-straight"))
+      (straight-symbolic-link (concat user-emacs-directory "straight")))
+  (ensure-directory-and-symlink emacs-straight straight-symbolic-link))
+
+(let ((amadeus-emacs-dir (concat xdg-share-dir "amadeus"))
+      (amadeus-emacs-symbolic-link (concat user-emacs-directory "emacs")))
+  (ensure-directory-and-symlink amadeus-emacs-dir amadeus-emacs-symbolic-link))
