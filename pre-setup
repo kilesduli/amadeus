@@ -18,10 +18,10 @@ If LINK exists but is not a symlink, it will be deleted first."
   (message ":: %s and link %s already created" dir link))
 
 
-(let ((emacs-straight (concat xdg-share-dir "emacs-straight"))
-      (straight-symbolic-link (concat user-emacs-directory "straight")))
-  (ensure-directory-and-symlink emacs-straight straight-symbolic-link))
+(defvar emacs-straight-dir (concat xdg-share-dir "emacs-straight/"))
+(defvar emacs-straight-dir-symbolic-link (concat user-emacs-directory "straight"))
+(ensure-directory-and-symlink emacs-straight-dir emacs-straight-dir-symbolic-link)
 
-(let ((amadeus-emacs-dir (concat xdg-share-dir "amadeus"))
-      (amadeus-emacs-symbolic-link (concat user-emacs-directory "emacs")))
-  (ensure-directory-and-symlink amadeus-emacs-dir amadeus-emacs-symbolic-link))
+(defvar amadeus-emacs-dir (concat xdg-share-dir "amadeus"))
+(defvar amadeus-emacs-dir-symbolic-link (concat user-emacs-directory "emacs"))
+(ensure-directory-and-symlink amadeus-emacs-dir amadeus-emacs-dir-symbolic-link)
