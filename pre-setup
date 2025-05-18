@@ -11,7 +11,7 @@
 
 (setq user-emacs-directory (file-name-directory load-file-name))
 
-;;; Make all Directory Exists
+;;;; Make all Directory Exists
 (defvar xdg-share-dir (expand-file-name (concat "~" user-login-name "/.local/share/")))
 
 (defun ensure-directory-and-symlink (dir link)
@@ -44,10 +44,10 @@ If LINK exists but is not a symlink, it will be deleted first."
   (make-symbolic-link straight-version-lockfile (concat straight-version-lockfile-dir "default.el"))
   (message ":: link straight-version-lockfile to %s" (concat emacs-straight-dir-symbolic-link "/version/default.el")))
 
-;;; Init Packages
+;;;; Init Packages
 (load (concat user-emacs-directory "package.el"))
 
-;;; Generate amadeus-init-file
+;;;; Generate amadeus-init-file
 (defvar amadeus-init-cached-vars
   '(load-path
     ;; maybe we will use straight-use-package in interactive session
