@@ -25,3 +25,12 @@ If LINK exists but is not a symlink, it will be deleted first."
 (defvar amadeus-emacs-dir (concat xdg-share-dir "amadeus"))
 (defvar amadeus-emacs-dir-symbolic-link (concat user-emacs-directory "emacs"))
 (ensure-directory-and-symlink amadeus-emacs-dir amadeus-emacs-dir-symbolic-link)
+
+(defvar straight-version-lockfile (concat user-emacs-directory "straight.lock.el"))
+(defvar straight-version-lockfile-dir (concat emacs-straight-dir "version/"))
+(when (file-exists-p straight-version-lockfile)
+  (message ":: found straight-version-lockfile: %s" straight-version-lockfile)
+  (make-directory straight-version-lockfile-dir 't)
+  (delete-file (concat straight-version-lockfile-dir "default.el"))
+  (make-symbolic-link straight-version-lockfile (concat straight-version-lockfile-dir "default.el"))
+  (message ":: link straight-version-lockfile to %s" (concat emacs-straight-dir-symbolic-link "/version/default.el")))
