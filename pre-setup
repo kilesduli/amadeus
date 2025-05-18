@@ -8,8 +8,7 @@
 (defun ensure-directory-and-symlink (dir link)
   "Ensure DIR exists and create a symbolic LINK pointing to it.
 If LINK exists but is not a symlink, it will be deleted first."
-  (unless (file-directory-p dir)
-    (make-directory dir 'parents)
+  (unless (make-directory dir 'parents)
     (message ":: create %s" dir))
   (unless (file-symlink-p link)
     (when (file-exists-p link)
