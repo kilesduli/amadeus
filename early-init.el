@@ -14,5 +14,7 @@
     (message ":: Run pre-setup.el first")
     (kill-emacs 1)))
 
+(setq package-enable-at-startup nil)
+
 (provide 'early-init)
 ;;; early-init.el ends here
