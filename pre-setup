@@ -63,13 +63,15 @@ If LINK exists but is not a symlink, it will be deleted first."
                  if (boundp var)
                  collect `(set-default ',var ',(symbol-value var)))))
 
+(setq amadeus-init-file (locate-user-emacs-file "amadeus-init.el"))
 (let (amadeus-init)
   (push (amadeus-init--generate-vars) amadeus-init)
   (message ":: create %s success" 'amadeus-init--generate-vars)
   (setq amadeus-init (nreverse amadeus-init))
-  (with-temp-file "amadeus-init.el"
+  (with-temp-file amadeus-init-file
     (elisp-enable-lexical-binding)
     (end-of-line)
     (newline)
     (cl-loop for var in amadeus-init
-             do (prin1 var (current-buffer)))))
+             do (prin1 var (current-buffer))))
+  (message ":: %s generated" amadeus-init-file))
