@@ -1,9 +1,18 @@
 #!/usr/bin/env -S emacs -x
 ;; -*- mode: emacs-lisp -*-
+;;
+;; Author: duli kiles <duli4868@gmail.com>
+;; Homepage: https://github.com/kilesduli/amadeus
+;;
+;; This file is not part of GNU Emacs.
+;;
+;;; Commentary:
+;;; Code:
 
-(defvar xdg-share-dir (expand-file-name (concat "~" user-login-name "/.local/share/")))
-(defvar straight-base-dir xdg-share-dir)
 (setq user-emacs-directory (file-name-directory load-file-name))
+
+;;; Make all Directory Exists
+(defvar xdg-share-dir (expand-file-name (concat "~" user-login-name "/.local/share/")))
 
 (defun ensure-directory-and-symlink (dir link)
   "Ensure DIR exists and create a symbolic LINK pointing to it.
@@ -34,3 +43,33 @@ If LINK exists but is not a symlink, it will be deleted first."
   (delete-file (concat straight-version-lockfile-dir "default.el"))
   (make-symbolic-link straight-version-lockfile (concat straight-version-lockfile-dir "default.el"))
   (message ":: link straight-version-lockfile to %s" (concat emacs-straight-dir-symbolic-link "/version/default.el")))
+
+;;; Init Packages
+(load (concat user-emacs-directory "package.el"))
+
+;;; Generate amadeus-init-file
+(defvar amadeus-init-cached-vars
+  '(load-path
+    ;; maybe we will use straight-use-package in interactive session
+    straight-repository-branch
+    straight-use-package-by-default
+    straight-build-dir
+    straight-vc-git-default-clone-depth)
+  "Variable needs keeps in interactive session.")
+
+(defun amadeus-init--generate-vars ()
+  `(defun amadeus--generate-vars ()
+     ,@(cl-loop  for var in amadeus-init-cached-vars
+                 if (boundp var)
+                 collect `(set-default ',var ',(symbol-value var)))))
+
+(let (amadeus-init)
+  (push (amadeus-init--generate-vars) amadeus-init)
+  (message ":: create %s success" 'amadeus-init--generate-vars)
+  (setq amadeus-init (nreverse amadeus-init))
+  (with-temp-file "amadeus-init.el"
+    (elisp-enable-lexical-binding)
+    (end-of-line)
+    (newline)
+    (cl-loop for var in amadeus-init
+             do (prin1 var (current-buffer)))))
