@@ -68,9 +68,9 @@ If LINK exists but is not a symlink, it will be deleted first."
 
 (defun amadeus-init--generate-vars ()
   `(defun amadeus--startup-vars ()
-     ,@(cl-loop  for var in amadeus-init-cached-vars
-                 if (boundp var)
-                 collect `(set-default ',var ',(symbol-value var)))))
+     ,@(cl-loop for var in amadeus-init-cached-vars
+                if (boundp var)
+                collect `(set-default ',var ',(symbol-value var)))))
 
 
 (defun amadeus-generate-init-file ()
