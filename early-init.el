@@ -21,7 +21,7 @@
 
   (if (file-exists-p amadeus-init-file)
       (progn
-        (load (concat user-emacs-directory "amadeus-init.el"))
+        (load amadeus-init-file)
         (amadeus-startup))
     (message ":: No %s, Run pre-setup.el first" (file-name-base amadeus-init-file))
     (kill-emacs 1)))
