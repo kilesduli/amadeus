@@ -190,6 +190,8 @@ Copy from doom, and remove some logic."
         (let (packages)
           (setq packages
                 (--> (amadeus-init--extract-setup-use-forms amadeus-user-init-file)
+                     (append it amadeus--pre-setup-autoloads)
+                     (delete-dups it)
                      (mapcar #'symbol-name it)
                      (amadeus-init--extract-autoload-packages it)
                      (mapcar #'straight--autoloads-file it)))))

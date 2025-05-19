@@ -7,6 +7,7 @@
 ;;
 ;;; Commentary:
 ;;; Package declaration:
+(defvar amadeus--pre-setup-autoloads nil)
 
 
 ;;; package.el ends here
