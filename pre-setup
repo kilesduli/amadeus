@@ -10,6 +10,7 @@
 ;;; Code:
 (require 'cl-lib)
 (setq user-emacs-directory (file-name-directory load-file-name))
+(defvar amadeus-user-init-file (locate-user-emacs-file "init.el"))
 
 ;;;; Make all Directory Exists
 (defvar xdg-share-dir (expand-file-name (concat "~" user-login-name "/.local/share/")))
@@ -80,6 +81,8 @@ If LINK exists but is not a symlink, it will be deleted first."
        `(quote ,package))))
 
 (load (concat user-emacs-directory "package.el"))
+;; dash install after load package.el
+(require 'dash)
 ;;;; Generate amadeus-init-file
 (setq amadeus-init-file (locate-user-emacs-file (format "amadeus-init.%s.el" emacs-version)))
 (defvar amadeus--init nil)
@@ -105,6 +108,80 @@ If LINK exists but is not a symlink, it will be deleted first."
                 if (boundp var)
                 collect `(set-default ',var ',(symbol-value var)))))
 
+(defun amadeus-init--extract-setup-use-forms (file)
+  "Extract all `:use` values from `setup` forms in FILE."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (cl-loop with result = nil
+             for form = (condition-case nil (read (current-buffer)) (end-of-file :eof))
+             until (eq form :eof)
+             when (and (listp form) (eq (car form) 'setup))
+             do (cl-loop for arg on (cdr form)
+                         while (and (consp (car arg)) (eq (caar arg) :use))
+                         do (setq result (append (cdar arg) result)))
+             finally return (delete-dups result))))
+
+(defun amadeus-init--extract-autoload-packages (packages)
+  "Retrieve the dependencies of the specified packages and return a merged list."
+  (let* ((straight-packages (hash-table-keys straight--build-cache)))
+    (--> (mapcar #'straight-dependencies packages)
+         (flatten-list it)
+         (delete-dups it)
+         (cl-remove-if-not
+          (lambda (x) (member x straight-packages))
+          it)
+         (append packages it)
+         (delete-dups it))))
+
+(defun amadeus-init--autoloads-cleanup-form (form)
+  "Remove `provide' form and already cached vars etc. in autoload.
+
+Copy from doom, and remove unnecessary check."
+  (let ((func (car-safe form)))
+    (cond ((memq func '(provide custom-autoload register-definition-prefixes))
+           nil)
+          ((and (eq func 'add-to-list)
+                ;; FIXME:
+                (memq (cadr form)
+                      amadeus-init-cached-vars))
+           nil)
+          (form))))
+
+(defun amadeus-init--autoloads-scan (files)
+  "Grab autoload contents from file.
+
+Copy from doom, and remove some logic."
+  (let (autoloads)
+    (dolist (file files (nreverse (delq nil autoloads)))
+      (if (file-readable-p file)
+          (with-temp-buffer
+            (let (subautoloads)
+              (insert-file-contents file)
+              (save-excursion
+                ;; Fixup the special #$ reader form and throw away comments.
+                (while (re-search-forward "#\\$\\|^;\\(.*\n\\)" nil 'move)
+                  (unless (ppss-string-terminator (save-match-data (syntax-ppss)))
+                    (replace-match (if (match-end 1) "" file) t t))))
+              (condition-case _
+                  (while t
+                    (push (amadeus-init--autoloads-cleanup-form (read (current-buffer)))
+                          subautoloads))
+                (end-of-file))
+              (when (delq nil subautoloads)
+                (push `(let* ((load-file-name ,file)
+                              (load-true-file-name load-file-name))
+                         ,@(nreverse subautoloads))
+                      autoloads))))))))
+
+(defun amadeus-init--generate-loaddefs-packages ()
+  `(defun amadeus--startup-loaddefs-packages ()
+     ,@(amadeus-init--autoloads-scan
+        (let (packages)
+          (setq packages
+                (--> (amadeus-init--extract-setup-use-forms amadeus-user-init-file)
+                     (mapcar #'symbol-name it)
+                     (amadeus-init--extract-autoload-packages it)
+                     (mapcar #'straight--autoloads-file it)))))))
 
 (defun amadeus-init--generate-init-file ()
   (pcase-dolist (`(,genfn ,initfn) amadeus-init-generators)
