@@ -80,8 +80,8 @@ If LINK exists but is not a symlink, it will be deleted first."
       (message ":: create %s success" initfn)))
   (push `(defun amadeus-startup ()
            ,@(cl-loop for (genfn initfn) in amadeus-init-generators
-                                   if (fboundp genfn)
-                                   collect (list initfn)))
+                      if (fboundp genfn)
+                      collect (list initfn)))
         amadeus--init)
   (setq amadeus--init (nreverse amadeus--init))
   (with-temp-file amadeus-init-file
