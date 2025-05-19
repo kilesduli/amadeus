@@ -8,7 +8,7 @@
 ;;
 ;;; Commentary:
 ;;; Code:
-
+(require 'cl-lib)
 (setq user-emacs-directory (file-name-directory load-file-name))
 
 ;;;; Make all Directory Exists
@@ -44,9 +44,42 @@ If LINK exists but is not a symlink, it will be deleted first."
   (make-symbolic-link straight-version-lockfile (concat straight-version-lockfile-dir "default.el"))
   (message ":: link straight-version-lockfile to %s" (concat emacs-straight-dir-symbolic-link "/version/default.el")))
 
-;;;; Init Packages
-(load (concat user-emacs-directory "package.el"))
+;;;; Bootstrap and straight and install packages.
+;; emacs script do not load early-init.el, we still disable it.
+(setq package-enable-at-startup nil)
+(setq straight-repository-branch "develop"
+      ;; We do not use use-package
+      straight-use-package-by-default nil
+      ;; Separate from other builds
+      straight-build-dir (format "amadeus-build-%s" emacs-version)
+      ;; just depth 1
+      straight-vc-git-default-clone-depth '(1 single-branch))
 
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+(cl-defmacro package! (package &key recipe)
+  "Declare all packages and use `straight-use-package'."
+  (declare (indent defun))
+  `(straight-use-package
+    ,(if recipe
+         `(quote ,(cons package recipe))
+       `(quote ,package))))
+
+(load (concat user-emacs-directory "package.el"))
 ;;;; Generate amadeus-init-file
 (setq amadeus-init-file (locate-user-emacs-file (format "amadeus-init.%s.el" emacs-version)))
 (defvar amadeus--init nil)
