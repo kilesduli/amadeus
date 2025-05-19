@@ -48,6 +48,15 @@ If LINK exists but is not a symlink, it will be deleted first."
 (load (concat user-emacs-directory "package.el"))
 
 ;;;; Generate amadeus-init-file
+(setq amadeus-init-file (locate-user-emacs-file "amadeus-init.el"))
+(defvar amadeus--init nil)
+
+(defvar amadeus-init-generators
+  '((amadeus-init--generate-vars               amadeus--startup-vars)
+    (amadeus-init--generate-loaddefs-amadeus   amadeus--startup-loaddefs-amadeus)
+    (amadeus-init--generate-loaddefs-packages  amadeus--startup-loaddefs-packages)
+    (amadeus-init--generate-load-modules       amadeus--startup-modules)))
+
 (defvar amadeus-init-cached-vars
   '(load-path
     ;; maybe we will use straight-use-package in interactive session
@@ -58,20 +67,29 @@ If LINK exists but is not a symlink, it will be deleted first."
   "Variable needs keeps in interactive session.")
 
 (defun amadeus-init--generate-vars ()
-  `(defun amadeus--generate-vars ()
+  `(defun amadeus--startup-vars ()
      ,@(cl-loop  for var in amadeus-init-cached-vars
                  if (boundp var)
                  collect `(set-default ',var ',(symbol-value var)))))
 
-(setq amadeus-init-file (locate-user-emacs-file "amadeus-init.el"))
-(let (amadeus-init)
-  (push (amadeus-init--generate-vars) amadeus-init)
-  (message ":: create %s success" 'amadeus-init--generate-vars)
-  (setq amadeus-init (nreverse amadeus-init))
+
+(defun amadeus-generate-init-file ()
+  (pcase-dolist (`(,genfn ,initfn) amadeus-init-generators)
+    (when (fboundp genfn)
+      (push (funcall genfn) amadeus--init)
+      (message ":: create %s success" initfn)))
+  (push `(defun amadeus-startup ()
+           ,@(cl-loop for (genfn initfn) in amadeus-init-generators
+                                   if (fboundp genfn)
+                                   collect (list initfn)))
+        amadeus--init)
+  (setq amadeus--init (nreverse amadeus--init))
   (with-temp-file amadeus-init-file
     (elisp-enable-lexical-binding)
-    (end-of-line)
+    (goto-char (point-max))
     (newline)
-    (cl-loop for var in amadeus-init
+    (cl-loop for var in amadeus--init
              do (prin1 var (current-buffer))))
   (message ":: %s generated" amadeus-init-file))
+
+(amadeus-generate-init-file)
