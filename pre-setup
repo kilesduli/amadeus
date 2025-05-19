@@ -91,7 +91,6 @@ If LINK exists but is not a symlink, it will be deleted first."
 (require 'dash)
 ;;;; Generate amadeus-init-file
 (setq amadeus-init-file (locate-user-emacs-file (format "amadeus-init.%s.el" emacs-version)))
-(defvar amadeus--init nil)
 
 (defvar amadeus-init-generators
   '((amadeus-init--generate-vars               amadeus--startup-vars)
