@@ -8,6 +8,7 @@
 ;;; Code:
 (defvar amadeus-init-file (locate-user-emacs-file (format "amadeus-init.%s.el" emacs-version))
   "The quickload file, to load variable and package autoloads etc.")
+(declare-function amadeus-startup amadeus-init-file)
 
 (unless noninteractive
   (let ((dirs (list "straight" "emacs")))
