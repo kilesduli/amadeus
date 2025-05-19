@@ -54,7 +54,8 @@ If LINK exists but is not a symlink, it will be deleted first."
       ;; Separate from other builds
       straight-build-dir (format "amadeus-build-%s" emacs-version)
       ;; just depth 1
-      straight-vc-git-default-clone-depth '(1 single-branch))
+      straight-vc-git-default-clone-depth '(1 single-branch)
+      straight-base-dir user-emacs-directory)
 
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -80,6 +81,11 @@ If LINK exists but is not a symlink, it will be deleted first."
          `(quote ,(cons package recipe))
        `(quote ,package))))
 
+(defun amadeus-init--fix-straight-use-package ()
+  `(autoload #'straight-use-package (expand-file-name
+                                  "straight/repos/straight.el/bootstrap.el"
+                                  ,(bound-and-true-p straight-base-dir)) nil t))
+
 (load (concat user-emacs-directory "package.el"))
 ;; dash install after load package.el
 (require 'dash)
@@ -101,7 +107,8 @@ If LINK exists but is not a symlink, it will be deleted first."
     straight-repository-branch
     straight-use-package-by-default
     straight-build-dir
-    straight-vc-git-default-clone-depth)
+    straight-vc-git-default-clone-depth
+    straight-base-dir)
   "Variable needs keeps in interactive session.")
 
 (defun amadeus-init--generate-vars ()
@@ -185,7 +192,8 @@ Copy from doom, and remove some logic."
                 (--> (amadeus-init--extract-setup-use-forms amadeus-user-init-file)
                      (mapcar #'symbol-name it)
                      (amadeus-init--extract-autoload-packages it)
-                     (mapcar #'straight--autoloads-file it)))))))
+                     (mapcar #'straight--autoloads-file it)))))
+     ,(amadeus-init--fix-straight-use-package)))
 
 (defun amadeus-init--generate-init-file ()
   "Call `amadeus-init-generators' to collect some boot stuff things. then
