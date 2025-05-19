@@ -48,7 +48,7 @@ If LINK exists but is not a symlink, it will be deleted first."
 (load (concat user-emacs-directory "package.el"))
 
 ;;;; Generate amadeus-init-file
-(setq amadeus-init-file (locate-user-emacs-file "amadeus-init.el"))
+(setq amadeus-init-file (locate-user-emacs-file (format "amadeus-init.%s.el" emacs-version)))
 (defvar amadeus--init nil)
 
 (defvar amadeus-init-generators
