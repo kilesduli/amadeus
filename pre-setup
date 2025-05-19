@@ -106,7 +106,7 @@ If LINK exists but is not a symlink, it will be deleted first."
                 collect `(set-default ',var ',(symbol-value var)))))
 
 
-(defun amadeus-generate-init-file ()
+(defun amadeus-init--generate-init-file ()
   (pcase-dolist (`(,genfn ,initfn) amadeus-init-generators)
     (when (fboundp genfn)
       (push (funcall genfn) amadeus--init)
@@ -125,4 +125,4 @@ If LINK exists but is not a symlink, it will be deleted first."
              do (prin1 var (current-buffer))))
   (message ":: %s generated" amadeus-init-file))
 
-(amadeus-generate-init-file)
+(amadeus-init--generate-init-file)
